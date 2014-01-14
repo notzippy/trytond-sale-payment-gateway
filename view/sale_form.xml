@@ -6,16 +6,18 @@
     <xpath expr="/form/field[@name='reference']" position="after">
         <label name="payment_request_to_process"/>
         <field name="payment_request_to_process"/>
-        <label name="amount_payment_received"/>
-        <field name="amount_payment_received"/>
-        <label name="amount_payment_in_progress"/>
-        <field name="amount_payment_in_progress"/>
-        <label name="amount_to_receive"/>
-        <field name="amount_to_receive"/>
     </xpath>
     <xpath expr="/form/notebook" position="inside">
         <page name="gateway_transactions">
-            <field name="gateway_transactions"/>
+            <group id="payment" col="6" colspan="4">
+                <label name="amount_payment_received"/>
+                <field name="amount_payment_received"/>
+                <label name="amount_payment_in_progress"/>
+                <field name="amount_payment_in_progress"/>
+                <label name="amount_to_receive"/>
+                <field name="amount_to_receive"/>
+            </group>
+            <field name="gateway_transactions" colspan="4"/>
         </page>
     </xpath>
 </data>
