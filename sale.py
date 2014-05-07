@@ -19,8 +19,8 @@ class Sale:
     'Sale'
     __name__ = 'sale.sale'
 
-    payment_request_to_process = fields.Boolean(
-        "Payment Request To Process",
+    payment_required_to_process = fields.Boolean(
+        "Payment Required To Process",
         states={'readonly': Eval('state') != 'draft'}
     )
     amount_payment_received = fields.Function(

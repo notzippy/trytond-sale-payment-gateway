@@ -4,8 +4,8 @@
         <field name="description" colspan="1"/>
     </xpath>
     <xpath expr="/form/field[@name='reference']" position="after">
-        <label name="payment_request_to_process"/>
-        <field name="payment_request_to_process"/>
+        <label name="payment_required_to_process"/>
+        <field name="payment_required_to_process"/>
     </xpath>
     <xpath expr="/form/notebook" position="inside">
         <page name="gateway_transactions">
