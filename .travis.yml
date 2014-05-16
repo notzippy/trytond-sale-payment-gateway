@@ -1,6 +1,6 @@
 language: python
 virtualenv:
-  system_site_packages: true
+  system_site_packages: false
 python:
   - 2.7
 install:
