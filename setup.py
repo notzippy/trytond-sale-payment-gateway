@@ -24,6 +24,7 @@ MODULE = 'sale_payment_gateway'
 PREFIX = 'openlabs'
 MODULE2PREFIX = {
     'payment_gateway': 'openlabs',
+    'invoice_payment_gateway': 'openlabs',
 }
 
 for dep in info.get('depends', []):
