@@ -8,8 +8,9 @@
 from decimal import Decimal
 
 from trytond.model import fields
-from trytond.pool import PoolMeta
+from trytond.pool import PoolMeta, Pool
 from trytond.pyson import Eval
+from trytond.transaction import Transaction
 
 __all__ = ['Sale', 'PaymentTransaction']
 __metaclass__ = PoolMeta
@@ -65,6 +66,84 @@ class Sale:
             return self.total_amount - (
                 self.amount_payment_in_progress + self.amount_payment_received
             )
+
+    def _pay_using_credit_card(self, gateway, credit_card, amount):
+        '''
+        Complete using the given credit card and finish the transaction.
+
+        :param gateway: Active record of the payment gateway to process card
+        :param credit_card: A dictionary with either of the following
+                            information sets:
+
+                            * owner: name of the owner (unicode)
+                            * number: number of the credit card
+                            * expiry_month: expiry month (int or string)
+                            * expiry_year: year as string
+                            * cvv: the cvv number
+
+                            In future this method will accept track1 and track2
+                            as valid information.
+        :param amount: Decimal amount to charge the card for
+        '''
+        TransactionUseCardWizard = Pool().get(
+            'payment_gateway.transaction.use_card', type='wizard'
+        )
+        PaymentTransaction = Pool().get('payment_gateway.transaction')
+
+        # Manual card based operation
+        payment_transaction = PaymentTransaction(
+            party=self.party,
+            address=self.invoice_address,
+            amount=amount,
+            currency=self.currency,
+            gateway=gateway,
+            sale=self,
+        )
+        payment_transaction.save()
+
+        use_card_wiz = TransactionUseCardWizard(
+            TransactionUseCardWizard.create()[0]        # Wizard session
+        )
+        use_card_wiz.card_info.owner = credit_card['owner']
+        use_card_wiz.card_info.number = credit_card['number']
+        use_card_wiz.card_info.expiry_month = credit_card['expiry_month']
+        use_card_wiz.card_info.expiry_year = credit_card['expiry_year']
+        use_card_wiz.card_info.csc = credit_card['cvv']
+
+        with Transaction().set_context(active_id=payment_transaction.id):
+            use_card_wiz.transition_capture()
+
+    def _pay_using_profile(self, payment_profile, amount):
+        '''
+        Complete the Checkout using a payment_profile. Only available to the
+        registered users of the website.
+
+
+        :param payment_profile: Active record of payment profile
+        :param amount: Decimal amount to charge the card for
+        '''
+        PaymentTransaction = Pool().get('payment_gateway.transaction')
+
+        if payment_profile.party != self.party:
+            self.raise_user_error(
+                "Payment profile'd owner is %s, but the customer is %s" % (
+                    payment_profile.party.name,
+                    self.party.name,
+                )
+            )
+
+        payment_transaction = PaymentTransaction(
+            party=self.party,
+            address=self.invoice_address,
+            payment_profile=payment_profile,
+            amount=amount,
+            currency=self.currency,
+            gateway=payment_profile.gateway,
+            sale=self,
+        )
+        payment_transaction.save()
+
+        PaymentTransaction.capture([payment_transaction])
 
 
 class PaymentTransaction:
