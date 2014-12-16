@@ -1,0 +1,9 @@
+<data>
+    <xpath expr="//field[@name='sale_shipment_method']" position="after">
+        <separator id="payment" string="Default Payment Capture Settings" colspan="4"/>
+        <label name="payment_authorize_on"/>
+        <field name="payment_authorize_on"/>
+        <label name="payment_capture_on"/>
+        <field name="payment_capture_on"/>
+    </xpath>
+</data>

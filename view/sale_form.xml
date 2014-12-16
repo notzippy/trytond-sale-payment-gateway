@@ -1,23 +1,21 @@
 <?xml version="1.0"?>
 <data>
-    <xpath expr="/form/field[@name='description']" position="replace_attributes">
-        <field name="description" colspan="1"/>
-    </xpath>
-    <xpath expr="/form/field[@name='reference']" position="after">
-        <label name="payment_required_to_process"/>
-        <field name="payment_required_to_process"/>
-    </xpath>
     <xpath expr="/form/notebook" position="inside">
-        <page name="gateway_transactions">
-            <group id="payment" col="6" colspan="4">
-                <label name="amount_payment_received"/>
-                <field name="amount_payment_received"/>
-                <label name="amount_payment_in_progress"/>
-                <field name="amount_payment_in_progress"/>
-                <label name="amount_to_receive"/>
-                <field name="amount_to_receive"/>
-            </group>
-            <field name="gateway_transactions" colspan="4"/>
+        <page name="payments" string="Payments">
+            <button name="add_payment" colspan="4" string="Add Payment"/>
+            <label name="payment_authorize_on"/>
+            <field name="payment_authorize_on"/>
+            <label name="payment_capture_on"/>
+            <field name="payment_capture_on"/>
+            <label name="payment_total"/>
+            <field name="payment_total"/>
+            <label name="payment_collected"/>
+            <field name="payment_collected"/>
+            <field name="sorted_payments" colspan="4"/>
+            <label name="payment_authorized"/>
+            <field name="payment_authorized"/>
+            <label name="payment_captured"/>
+            <field name="payment_captured"/>
         </page>
     </xpath>
 </data>
