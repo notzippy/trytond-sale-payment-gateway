@@ -1,0 +1,27 @@
+# 
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "field:payment_gateway.transaction,sale:"
+msgid "Sale"
+msgstr "Verkauf"
+
+msgctxt "field:sale.sale,amount_payment_in_progress:"
+msgid "Payment In Progress"
+msgstr "Zahlung in Bearbeitung"
+
+msgctxt "field:sale.sale,amount_payment_received:"
+msgid "Payment Received"
+msgstr "Zahlung erhalten"
+
+msgctxt "field:sale.sale,amount_to_receive:"
+msgid "Amount to Received"
+msgstr "Fälliger Betrag"
+
+msgctxt "field:sale.sale,gateway_transactions:"
+msgid "Gateway Transactions"
+msgstr "Gateway Transaktionen"
+
+msgctxt "field:sale.sale,payment_required_to_process:"
+msgid "Payment Required To Process"
+msgstr "Zahlung für Durchführung erforderlich"
