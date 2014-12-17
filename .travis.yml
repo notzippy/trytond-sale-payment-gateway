@@ -1,16 +1,12 @@
 language: python
-virtualenv:
-  system_site_packages: false
 python:
-  - 2.7
-install:
-  - pip install flake8
-  - python setup.py install
-before_install:
-  - sudo apt-get install python-lxml
-script:
-  - python setup.py test
-  - flake8 .
+  - "2.7"
+install: true  # override default install `pip install -r requirements.txt`
+script: make test-$TEST_CMD
+env:
+  - TEST_CMD="sqlite"
+  - TEST_CMD="postgres"
+  - TEST_CMD="flake8"
 notifications:
   email:
-  - ci-notify@openlabs.co.in
+    - ci-notify@openlabs.co.in
