@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import time
 import re
 import os
 import unittest
@@ -29,6 +30,40 @@ class SQLiteTest(Command):
         from trytond.config import CONFIG
         CONFIG['db_type'] = 'sqlite'
         os.environ['DB_NAME'] = ':memory:'
+
+        from tests import suite
+        test_result = unittest.TextTestRunner(verbosity=3).run(suite())
+
+        if test_result.wasSuccessful():
+            sys.exit(0)
+        sys.exit(-1)
+
+
+class PostgresTest(Command):
+    """
+    Run the tests on Postgres.
+    """
+    description = "Run tests on Postgresql"
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        if self.distribution.tests_require:
+            self.distribution.fetch_build_eggs(self.distribution.tests_require)
+
+        from trytond.config import CONFIG
+        CONFIG['db_type'] = 'postgresql'
+        CONFIG['db_host'] = 'localhost'
+        CONFIG['db_port'] = 5432
+        CONFIG['db_user'] = 'postgres'
+
+        os.environ['DB_NAME'] = 'test_' + str(int(time.time()))
 
         from tests import suite
         test_result = unittest.TextTestRunner(verbosity=3).run(suite())
@@ -114,5 +149,6 @@ setup(
     test_loader='trytond.test_loader:Loader',
     cmdclass={
         'test': SQLiteTest,
+        'test_on_postgres': PostgresTest,
     },
 )
