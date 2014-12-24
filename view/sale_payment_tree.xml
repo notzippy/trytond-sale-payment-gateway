@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<tree string="Payments">
+    <field name="sale" />
+    <field name="party" />
+    <field name="gateway"/>
+    <field name="amount"/>
+    <field name="amount_available"/>
+</tree>

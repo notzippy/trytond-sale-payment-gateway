@@ -7,80 +7,365 @@
 """
 from decimal import Decimal
 
-from trytond.model import fields
+from trytond.model import ModelView, fields, Workflow
 from trytond.pool import PoolMeta, Pool
-from trytond.pyson import Eval
 from trytond.transaction import Transaction
+from trytond.pyson import Eval, Bool, And, Not, Or
+from trytond.wizard import Wizard, StateView, StateTransition, Button
 
-__all__ = ['Sale', 'PaymentTransaction']
+from trytond.modules.payment_gateway.transaction import BaseCreditCardViewMixin
+
+__all__ = ['Sale', 'PaymentTransaction', 'AddSalePaymentView', 'AddSalePayment']
 __metaclass__ = PoolMeta
+
+READONLY_IF_PAYMENTS = {
+    'readonly': Not(Bool(Eval('payments')))
+}
 
 
 class Sale:
     'Sale'
     __name__ = 'sale.sale'
 
-    payment_required_to_process = fields.Boolean(
-        "Payment Required To Process",
-        states={'readonly': Eval('state') != 'draft'}
+    # Readonly because the wizard should be the one adding payment gateways as
+    # it provides a more cusomizable UX than directly adding a record.
+    # For example, taking CC numbers.
+    payments = fields.One2Many(
+        'sale.payment', 'sale', 'Payments', readonly=True,
     )
-    amount_payment_received = fields.Function(
-        fields.Numeric("Payment Received"), "get_payment"
+    sorted_payments = fields.Function(
+        fields.One2Many('sale.payment', None, 'Payments'),
+        'get_sorted_payments'
     )
-    amount_payment_in_progress = fields.Function(
-        fields.Numeric("Payment In Progress"), "get_payment"
+
+    # Sale must be able to define when it should authorize and capture the
+    # payments.
+    payment_authorize_on = fields.Selection(
+        'get_authorize_options', 'Payment Authorize On', required=True,
+        states=READONLY_IF_PAYMENTS,
     )
-    amount_to_receive = fields.Function(
-        fields.Numeric("Amount to Received"), "get_payment"
+    payment_capture_on = fields.Selection(
+        'get_capture_options', 'Payment Captured On', required=True,
+        states=READONLY_IF_PAYMENTS,
     )
-    gateway_transactions = fields.One2Many(
-        'payment_gateway.transaction', 'sale', 'Gateway Transactions',
-        readonly=True,
+
+    gateway_transactions = fields.Function(
+        fields.One2Many(
+            'payment_gateway.transaction', None, 'Gateway Transactions',
+        ), "get_gateway_transactions"
     )
+    payment_total = fields.Function(
+        fields.Numeric(
+            'Total Payment', digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits'],
+            help="Total value of payments"
+        ), 'get_payment',
+    )
+    payment_collected = fields.Function(
+        fields.Numeric(
+            'Payment Collected', digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits'],
+            help="Total value of payments collected"
+        ), 'get_payment',
+    )
+    payment_available = fields.Function(
+        fields.Numeric(
+            'Payment Remaining', digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits'],
+            help="Total value which is neither authorize nor captured"
+        ), 'get_payment',
+    )
+    payment_authorized = fields.Function(
+        fields.Numeric(
+            'Payment Authorized', digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits'],
+            help="Amount authorized to be catured"
+        ), 'get_payment',
+    )
+    payment_captured = fields.Function(
+        fields.Numeric(
+            'Payment Captured', digits=(16, Eval('currency_digits', 2)),
+            depends=['currency_digits'],
+            help="Amount already captured"
+        ), 'get_payment',
+    )
+
+    @classmethod
+    def __setup__(cls):
+        super(Sale, cls).__setup__()
+        cls._buttons.update({
+            'add_payment': {
+                'invisible': Eval('state').in_(['cancel', 'draft']),
+            },
+        })
+        cls._error_messages.update({
+            'insufficient_amount_to_authorize':
+                "Insufficient amount remaining in payment\n"
+                "Amount to authorize: %s\n"
+                "Amount remaining: %s\n"
+                "Payments: %s",
+            'insufficient_amount_to_capture':
+                "Insufficient amount remaining in payment\n"
+                "Amount to capture: %s\n"
+                "Amount remaining: %s\n"
+                "Payments: %s",
+            "auth_before_capture":
+                "Payment authorization must happen before capture"
+        })
+
+    @classmethod
+    def validate(cls, sales):
+        super(Sale, cls).validate(sales)
+
+        for sale in sales:
+            sale.validate_payment_combination()
+
+    def validate_payment_combination(self):
+        if self.payment_authorize_on == 'sale_process' and \
+                self.payment_capture_on == 'sale_confirm':
+            self.raise_user_error("auth_before_capture")
+
+    @classmethod
+    def get_authorize_options(cls):
+        """Return all the options from sale configuration.
+        """
+        SaleConfiguration = Pool().get('sale.configuration')
+
+        return SaleConfiguration.get_authorize_options()
+
+    @classmethod
+    def get_capture_options(cls):
+        """Return all the options from sale configuration.
+        """
+        SaleConfiguration = Pool().get('sale.configuration')
+
+        return SaleConfiguration.get_capture_options()
+
+    @staticmethod
+    def default_payment_authorize_on():
+        SaleConfiguration = Pool().get('sale.configuration')
+
+        return SaleConfiguration(1).payment_authorize_on
+
+    @staticmethod
+    def default_payment_capture_on():
+        SaleConfiguration = Pool().get('sale.configuration')
+
+        return SaleConfiguration(1).payment_capture_on
+
+    @classmethod
+    def get_payment_method_priority(cls):
+        """Priority order for payment methods. Downstream modules can override
+        this method to change the method priority.
+        """
+        return ('manual', 'credit_card')
+
+    def get_gateway_transactions(self, name):
+        GatewayTransaction = Pool().get('payment_gateway.transaction')
+
+        return map(
+            int, GatewayTransaction.search(
+                [('sale_payment', 'in', map(int, self.payments))]
+            )
+        )
 
     def get_payment(self, name):
+        """Return amount from payments.
         """
-        Getter method for 'payment_received', 'payment_in_progress' and
-        'balance_to_received' fields.
+        Payment = Pool().get('sale.payment')
 
-        :param name: name of the field
+        payments = Payment.search([('sale', '=', self.id)])
+
+        if name == 'payment_total':
+            return Decimal(sum([payment.amount for payment in payments]))
+
+        elif name == 'payment_available':
+            return Decimal(
+                sum([payment.amount_available for payment in payments])
+            )
+
+        elif name == 'payment_captured':
+            return Decimal(sum(
+                [payment.amount_captured for payment in payments]
+            ))
+
+        elif name == 'payment_authorized':
+            return Decimal(sum(
+                [payment.amount_authorized for payment in payments]
+            ))
+
+        elif name == 'payment_collected':
+            return self.payment_total - self.payment_available
+
+    @classmethod
+    @ModelView.button_action('sale_payment_gateway.wizard_add_payment')
+    def add_payment(cls, sales):
+        pass
+
+    def get_sorted_payments(self, name=None):
         """
-        # TODO: Do currency converstions
-        sum_transactions = lambda txns: sum((txn.amount for txn in txns))
+        Return the payments in the order they should be consumed
+        """
+        payment_method_priority = self.get_payment_method_priority()
+        return map(int, sorted(
+            self.payments,
+            key=lambda t: payment_method_priority.index(t.method)
+        ))
 
-        if name == 'amount_payment_received':
-            transactions = filter(
-                lambda txn: txn.state in ('completed', 'posted'),
-                self.gateway_transactions
+    def authorize_payments(self, amount, description="Payment from sale"):
+        """Authorize sale payments
+        """
+        if amount > self.payment_available:
+            self.raise_user_error(
+                "insufficient_amount_to_authorize", error_args=(
+                    amount,
+                    self.payment_available,
+                    len(self.payments),
+                )
             )
-            return Decimal(sum_transactions(transactions))
 
-        elif name == 'amount_payment_in_progress':
-            transactions = filter(
-                lambda txn: txn.state in ('authorized', 'in-progress'),
-                self.gateway_transactions
-            )
-            return Decimal(sum_transactions(transactions))
+        transactions = []
+        for payment in self.sorted_payments:
+            if not amount:
+                break
 
-        elif name == 'amount_to_receive':
-            return self.total_amount - (
-                self.amount_payment_in_progress + self.amount_payment_received
+            if not payment.amount_available or payment.method == "manual":
+                continue
+
+            # The amount to authorize is the amount_available if the
+            # amount_available is less than the amount we seek.
+            authorize_amount = min(amount, payment.amount_available)
+
+            transactions.append(
+                payment.authorize(authorize_amount, description)
             )
+
+            amount -= authorize_amount
+
+        return transactions
+
+    def capture_payments(self, amount, description="Payment from sale"):
+        """Capture sale payments.
+
+        * If existing authorizations exist, capture them
+        * If not, capture available payments directly
+        """
+        PaymentTransaction = Pool().get('payment_gateway.transaction')
+
+        if amount > (self.payment_available + self.payment_authorized):
+            self.raise_user_error(
+                "insufficient_amount_to_capture", error_args=(
+                    amount,
+                    self.payment_available,
+                    len(self.payments),
+                )
+            )
+
+        txns_to_settle = []
+        authorized_transactions = filter(
+            lambda transaction: transaction.state == 'authorized',
+            self.gateway_transactions
+        )
+        for transaction in authorized_transactions:
+            if not amount:
+                break       # pragma: no cover
+
+            capture_amount = min(amount, transaction.amount)
+
+            # Write the new amount of the transaction as the amount
+            # required to be captured
+            transaction.amount = capture_amount
+            transaction.save()
+            txns_to_settle.append(transaction)
+
+            amount -= capture_amount
+
+        for payment in self.sorted_payments:
+            if not amount:
+                break
+
+            if not payment.amount_available:
+                continue
+
+            # The amount to capture is the amount_available if the
+            # amount_available is less than the amount we seek.
+            authorize_amount = min(amount, payment.amount_available)
+
+            txns_to_settle.append(
+                payment.authorize(authorize_amount, description)
+            )
+
+            amount -= authorize_amount
+
+        PaymentTransaction.settle(txns_to_settle)
+        return txns_to_settle
+
+    def handle_payment_on_confirm(self):
+        if self.payment_capture_on == 'sale_confirm':
+            self.capture_payments(self.total_amount)
+
+        elif self.payment_authorize_on == 'sale_confirm':
+            self.authorize_payments(self.total_amount)
+
+    def handle_payment_on_process(self):
+        if self.payment_capture_on == 'sale_process':
+            self.capture_payments(self.total_amount)
+
+        elif self.payment_authorize_on == 'sale_process':
+            self.authorize_payments(self.total_amount)
+
+    def settle_manual_payments(self):
+        """
+        Manual payments should be settled when the order is processed. This is
+        separated into a different method so downstream modules can change this
+        behavior to adapt to different workflows
+        """
+        PaymentTransaction = Pool().get('payment_gateway.transaction')
+
+        # first settle existing manual authorized txns. Capturing them
+        # directly will create new ones.
+        txns_to_settle = filter(
+            lambda txn: txn.state == 'authorized' and txn.method == 'manual',
+            self.gateway_transactions
+        )
+        PaymentTransaction.settle(txns_to_settle)
+
+        for payment in self.payments:
+            if payment.amount_available and payment.method == "manual":
+                payment.capture(
+                    payment.amount_available,
+                    'Post manual payments on Processing Order'
+                )
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('confirmed')
+    def confirm(cls, sales):
+        super(Sale, cls).confirm(sales)
+
+        for sale in sales:
+            sale.handle_payment_on_confirm()
+
+    @classmethod
+    @Workflow.transition('processing')
+    def proceed(cls, sales):
+        super(Sale, cls).proceed(sales)
+
+        for sale in sales:
+            sale.handle_payment_on_process()
+            sale.settle_manual_payments()
 
     def _pay_using_credit_card(self, gateway, credit_card, amount):
         '''
         Complete using the given credit card and finish the transaction.
-
         :param gateway: Active record of the payment gateway to process card
         :param credit_card: A dictionary with either of the following
                             information sets:
-
                             * owner: name of the owner (unicode)
                             * number: number of the credit card
                             * expiry_month: expiry month (int or string)
                             * expiry_year: year as string
                             * cvv: the cvv number
-
                             In future this method will accept track1 and track2
                             as valid information.
         :param amount: Decimal amount to charge the card for
@@ -117,8 +402,6 @@ class Sale:
         '''
         Complete the Checkout using a payment_profile. Only available to the
         registered users of the website.
-
-
         :param payment_profile: Active record of payment profile
         :param amount: Decimal amount to charge the card for
         '''
@@ -150,7 +433,198 @@ class PaymentTransaction:
     "Gateway Transaction"
     __name__ = 'payment_gateway.transaction'
 
-    sale = fields.Many2One('sale.sale', 'Sale')
+    sale_payment = fields.Many2One(
+        'sale.payment', 'Sale Payment', required=True, ondelete='RESTRICT',
+        select=True,
+    )
 
     def get_shipping_address(self, name):
         return self.sale and self.sale.shipment_address.id or None
+
+
+class AddSalePaymentView(BaseCreditCardViewMixin, ModelView):
+    """
+    View for adding Sale Payments
+    """
+    __name__ = 'sale.payment.add_view'
+
+    sale = fields.Many2One(
+        'sale.sale', 'Sale', required=True, readonly=True
+    )
+
+    party = fields.Many2One('party.party', 'Party', readonly=True)
+    gateway = fields.Many2One(
+        'payment_gateway.gateway', 'Gateway', required=True,
+    )
+    currency_digits = fields.Function(
+        fields.Integer('Currency Digits'),
+        'get_currency_digits'
+    )
+    method = fields.Function(
+        fields.Char('Payment Gateway Method'), 'get_method'
+    )
+    use_existing_card = fields.Boolean(
+        'Use existing Card?', states={
+            'invisible': Eval('method') != 'credit_card'
+        }, depends=['method']
+    )
+    payment_profile = fields.Many2One(
+        'party.payment_profile', 'Payment Profile',
+        domain=[
+            ('party', '=', Eval('party')),
+            ('gateway', '=', Eval('gateway')),
+        ],
+        states={
+            'required': And(
+                Eval('method') == 'credit_card', Bool(Eval('use_existing_card'))
+            ),
+            'invisible': ~Bool(Eval('use_existing_card'))
+        }, depends=['method', 'use_existing_card', 'party', 'gateway']
+    )
+    amount = fields.Numeric(
+        'Amount', digits=(16, Eval('currency_digits', 2)),
+        required=True, depends=['currency_digits'],
+    )
+    reference = fields.Char(
+        'Reference', states={
+            'invisible': Not(Eval('method') == 'manual'),
+        }
+    )
+
+    @classmethod
+    def __setup__(cls):
+        super(AddSalePaymentView, cls).__setup__()
+
+        INV = Or(
+            Eval('method') == 'manual',
+            And(
+                Eval('method') == 'credit_card',
+                Bool(Eval('use_existing_card'))
+            )
+        )
+        STATE1 = {
+            'required': And(
+                ~Bool(Eval('use_existing_card')),
+                Eval('method') == 'credit_card'
+            ),
+            'invisible': INV
+        }
+        DEPENDS = ['use_existing_card', 'method']
+
+        cls.owner.states.update(STATE1)
+        cls.owner.depends.extend(DEPENDS)
+        cls.number.states.update(STATE1)
+        cls.number.depends.extend(DEPENDS)
+        cls.expiry_month.states.update(STATE1)
+        cls.expiry_month.depends.extend(DEPENDS)
+        cls.expiry_year.states.update(STATE1)
+        cls.expiry_year.depends.extend(DEPENDS)
+        cls.csc.states.update(STATE1)
+        cls.csc.depends.extend(DEPENDS)
+        cls.swipe_data.states = {'invisible': INV}
+        cls.swipe_data.depends = ['method']
+
+    def get_currency_digits(self, name):
+        return self.sale.currency_digits if self.sale else 2
+
+    def get_method(self, name=None):
+        """
+        Return the method based on the gateway
+        """
+        return self.gateway.method
+
+    @fields.depends('gateway')
+    def on_change_gateway(self):
+        if self.gateway:
+            return {
+                'method': self.gateway.method,
+            }
+        return {}
+
+
+class AddSalePayment(Wizard):
+    """
+    Wizard to add a Sale Payment
+    """
+    __name__ = 'sale.payment.add'
+
+    start_state = 'payment_info'
+
+    payment_info = StateView(
+        'sale.payment.add_view',
+        'sale_payment_gateway.sale_payment_add_view_form',
+        [
+            Button('Cancel', 'end', 'tryton-cancel'),
+            Button('Add', 'add', 'tryton-ok', default=True)
+        ]
+    )
+    add = StateTransition()
+
+    def default_payment_info(self, fields=None):
+        Sale = Pool().get('sale.sale')
+
+        sale = Sale(Transaction().context.get('active_id'))
+
+        res = {
+            'sale': sale.id,
+            'party': sale.party.id,
+            'owner': sale.party.name,
+            'currency_digits': sale.currency_digits,
+            'amount': sale.total_amount - sale.payment_total,
+        }
+        return res
+
+    def create_sale_payment(self, profile=None):
+        """
+        Helper function to create new payment
+        """
+        SalePayment = Pool().get('sale.payment')
+
+        SalePayment.create([{
+            'sale': Transaction().context.get('active_id'),
+            'party': self.payment_info.party,
+            'gateway': self.payment_info.gateway,
+            'payment_profile': profile,
+            'amount': self.payment_info.amount,
+            'reference': self.payment_info.reference or None,
+        }])
+
+    def create_payment_profile(self):
+        """
+        Helper function to create payment profile
+        """
+        Sale = Pool().get('sale.sale')
+        ProfileWizard = Pool().get(
+            'party.party.payment_profile.add', type="wizard"
+        )
+        profile_wizard = ProfileWizard(
+            ProfileWizard.create()[0]
+        )
+        profile_wizard.card_info.owner = self.payment_info.owner
+        profile_wizard.card_info.number = self.payment_info.number
+        profile_wizard.card_info.expiry_month = self.payment_info.expiry_month
+        profile_wizard.card_info.expiry_year = self.payment_info.expiry_year
+        profile_wizard.card_info.csc = self.payment_info.csc or ''
+        profile_wizard.card_info.gateway = self.payment_info.gateway
+        profile_wizard.card_info.provider = self.payment_info.gateway.provider
+        profile_wizard.card_info.address = Sale(
+            Transaction().context.get('active_id')
+        ).invoice_address
+        profile_wizard.card_info.party = self.payment_info.party
+
+        with Transaction().set_context(return_profile=True):
+            profile = profile_wizard.transition_add()
+        return profile
+
+    def transition_add(self):
+        """
+        Creates a new payment and ends the wizard
+        """
+        profile = self.payment_info.payment_profile
+        if self.payment_info.method == 'credit_card' and (
+            not self.payment_info.use_existing_card
+        ):
+            profile = self.create_payment_profile()
+
+        self.create_sale_payment(profile=profile)
+        return 'end'
