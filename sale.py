@@ -439,7 +439,8 @@ class PaymentTransaction:
     )
 
     def get_shipping_address(self, name):
-        return self.sale and self.sale.shipment_address.id or None
+        return self.sale_payment.sale and \
+            self.sale_payment.sale.shipment_address.id
 
 
 class AddSalePaymentView(BaseCreditCardViewMixin, ModelView):
