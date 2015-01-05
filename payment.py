@@ -36,7 +36,7 @@ class Payment(ModelSQL, ModelView):
         ondelete='RESTRICT', select=True,
     )
     payment_transactions = fields.One2Many(
-        'payment_gateway.transaction', 'payment', 'Payment Transactions',
+        'payment_gateway.transaction', 'sale_payment', 'Payment Transactions',
         readonly=True
     )
     currency_digits = fields.Function(
