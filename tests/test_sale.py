@@ -333,6 +333,18 @@ class TestSale(BaseTestCase):
 
         return sale
 
+    def _confirm_sale_by_completing_payments(self, sales):
+        """Confirm sale and complete payments.
+        """
+        self.Sale.confirm(sales)
+        self.Sale.complete_payments()
+
+    def _process_sale_by_completing_payments(self, sales):
+        """Process sale and complete payments.
+        """
+        self.Sale.proceed(sales)
+        self.Sale.complete_payments()
+
     def test_0005_single_payment_CASE1(self):
         """
         ===================================
@@ -377,8 +389,8 @@ class TestSale(BaseTestCase):
                 # confirm and process the sale, payment will not go
                 # through because capture and auth is manual.
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
-                self.Sale.proceed([sale])
+                self._confirm_sale_by_completing_payments([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
@@ -428,7 +440,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -437,7 +449,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -486,7 +498,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
@@ -495,7 +507,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -545,7 +557,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -554,7 +566,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('200'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -604,7 +616,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -615,7 +627,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -664,7 +676,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -673,7 +685,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('200'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -722,7 +734,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
@@ -731,7 +743,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -802,7 +814,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
@@ -811,7 +823,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -870,8 +882,8 @@ class TestSale(BaseTestCase):
                 # confirm and process the sale, payment will not go
                 # through because capture and auth is manual.
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
-                self.Sale.proceed([sale])
+                self._confirm_sale_by_completing_payments([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('100'))
@@ -925,7 +937,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -934,7 +946,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -988,7 +1000,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
@@ -997,7 +1009,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -1051,7 +1063,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('100'))
@@ -1060,7 +1072,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('100'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -1114,7 +1126,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -1125,7 +1137,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -1179,7 +1191,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('100'))
@@ -1188,7 +1200,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('100'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -1242,7 +1254,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
@@ -1251,7 +1263,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
@@ -1305,7 +1317,7 @@ class TestSale(BaseTestCase):
 
             with Transaction().set_context(company=self.company.id):
                 self.Sale.quote([sale])
-                self.Sale.confirm([sale])
+                self._confirm_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
@@ -1314,7 +1326,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             with Transaction().set_context(company=self.company.id):
-                self.Sale.proceed([sale])
+                self._process_sale_by_completing_payments([sale])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('0'))
