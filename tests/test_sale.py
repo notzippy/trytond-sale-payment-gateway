@@ -2,13 +2,12 @@
 """
     tests/test_sale.py
 
-    :copyright: (C) 2014 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: (C) 2014-2015 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
 import os
 if 'DB_NAME' not in os.environ:
-    from trytond.config import CONFIG
-    CONFIG['db_type'] = 'sqlite'
+    os.environ['TRYTOND_DATABASE_URI'] = 'sqlite://'
     os.environ['DB_NAME'] = ':memory:'
 import unittest
 import datetime
