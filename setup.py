@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import time
 import re
 import os
 import unittest
@@ -26,9 +27,41 @@ class SQLiteTest(Command):
         pass
 
     def run(self):
-        from trytond.config import CONFIG
-        CONFIG['db_type'] = 'sqlite'
+        if self.distribution.tests_require:
+            self.distribution.fetch_build_eggs(self.distribution.tests_require)
+
+        os.environ['TRYTOND_DATABASE_URI'] = 'sqlite://'
         os.environ['DB_NAME'] = ':memory:'
+
+        from tests import suite
+        test_result = unittest.TextTestRunner(verbosity=3).run(suite())
+
+        if test_result.wasSuccessful():
+            sys.exit(0)
+        sys.exit(-1)
+
+
+class PostgresTest(Command):
+    """
+    Run the tests on Postgres.
+    """
+    description = "Run tests on Postgresql"
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        if self.distribution.tests_require:
+            self.distribution.fetch_build_eggs(self.distribution.tests_require)
+
+        os.environ['TRYTOND_DATABASE_URI'] = 'postgresql://'
+
+        os.environ['DB_NAME'] = 'test_' + str(int(time.time()))
 
         from tests import suite
         test_result = unittest.TextTestRunner(verbosity=3).run(suite())
@@ -49,6 +82,9 @@ major_version = int(major_version)
 minor_version = int(minor_version)
 
 requires = []
+tests_require = [
+    'pycountry',
+]
 
 MODULE = 'sale_payment_gateway'
 PREFIX = 'openlabs'
@@ -101,7 +137,7 @@ setup(
     ],
     license='GPL-3',
     install_requires=requires,
-    tests_require=['proteus'],
+    tests_require=tests_require,
     extras_require={
         'docs': ['sphinx', 'sphinx_rtd_theme'],
     },
@@ -114,5 +150,6 @@ setup(
     test_loader='trytond.test_loader:Loader',
     cmdclass={
         'test': SQLiteTest,
+        'test_on_postgres': PostgresTest,
     },
 )

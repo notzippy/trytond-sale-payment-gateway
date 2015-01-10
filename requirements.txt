@@ -1,0 +1,7 @@
+psycopg2
+
+sphinx
+sphinx_rtd_theme
+
+# Install this package itself
+.
