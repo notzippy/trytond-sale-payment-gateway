@@ -194,25 +194,20 @@ class Payment(ModelSQL, ModelView):
             'provider_reference': self.reference,
         }])[0]
 
-    def authorize(self, amount, description):
-        """
-        Authorize the given amount from this transaction
+    def authorize(self):
+        """Authorize all the transactions associated with the payment.
         """
         PaymentTransaction = Pool().get('payment_gateway.transaction')
 
-        transaction = self._create_payment_transaction(amount, description)
-        PaymentTransaction.authorize([transaction])
-        return transaction
+        PaymentTransaction.authorize(self.payment_transactions)
 
-    def capture(self, amount, description):
+    def capture(self):
         """
         Captures the given amount from this transaction
         """
         PaymentTransaction = Pool().get('payment_gateway.transaction')
 
-        transaction = self._create_payment_transaction(amount, description)
-        PaymentTransaction.capture([transaction])
-        return transaction
+        PaymentTransaction.capture(self.payment_transactions)
 
     @classmethod
     def delete(cls, payments):

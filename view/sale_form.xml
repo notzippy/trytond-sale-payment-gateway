@@ -12,10 +12,14 @@
             <label name="payment_collected"/>
             <field name="payment_collected"/>
             <field name="sorted_payments" colspan="4"/>
-            <label name="payment_authorized"/>
-            <field name="payment_authorized"/>
-            <label name="payment_captured"/>
-            <field name="payment_captured"/>
+            <group id="payment_state_and_amount" col="6" colspan="4">
+                <label name="payment_authorized"/>
+                <field name="payment_authorized"/>
+                <label name="payment_captured"/>
+                <field name="payment_captured"/>
+                <label name="payment_processing_state"/>
+                <field name="payment_processing_state"/>
+            </group>
         </page>
     </xpath>
 </data>
