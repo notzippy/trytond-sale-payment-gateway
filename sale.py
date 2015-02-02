@@ -486,8 +486,7 @@ class PaymentTransaction:
     __name__ = 'payment_gateway.transaction'
 
     sale_payment = fields.Many2One(
-        'sale.payment', 'Sale Payment', required=True, ondelete='RESTRICT',
-        select=True,
+        'sale.payment', 'Sale Payment', ondelete='RESTRICT', select=True,
     )
 
     def get_shipping_address(self, name):
