@@ -490,7 +490,7 @@ class PaymentTransaction:
     )
 
     def get_shipping_address(self, name):
-        return self.sale_payment.sale and \
+        return self.sale_payment and self.sale_payment.sale and \
             self.sale_payment.sale.shipment_address.id
 
 
