@@ -1,0 +1,400 @@
+# 
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "error:sale.configuration:"
+msgid "Payment authorization must happen before capture"
+msgstr "L'autorisation de paiement doit se faire avant la capture"
+
+msgctxt "error:sale.payment:"
+msgid ""
+"Payment cannot be deleted as placeholder for amount consumed has already "
+"been consumed."
+msgstr ""
+"Le paiement ne peut être supprimé a cet endroit pour un montant consommé qui"
+" a déjà été consommé."
+
+msgctxt "error:sale.sale:"
+msgid ""
+"Insufficient amount remaining in payment\n"
+"Amount to authorize: %s\n"
+"Amount remaining: %s\n"
+"Payments: %s"
+msgstr ""
+"Montant restant insuffisant dans le paiement\n"
+"Montant a autoriser : %s\n"
+"Montant restant : %s\n"
+"Paiements : %s"
+
+msgctxt "error:sale.sale:"
+msgid ""
+"Insufficient amount remaining in payment\n"
+"Amount to capture: %s\n"
+"Amount remaining: %s\n"
+"Payments: %s"
+msgstr ""
+"Montant restant insuffisant dans le paiement\n"
+"Montant a capturer : %s\n"
+"Montant restant : %s\n"
+"Paiements : %s"
+
+msgctxt "error:sale.sale:"
+msgid "Payment authorization must happen before capture"
+msgstr "L'autorisation de paiement doit se faire avant la capture"
+
+msgctxt "field:payment_gateway.transaction,sale_payment:"
+msgid "Sale Payment"
+msgstr "Paiement de vente"
+
+msgctxt "field:sale.configuration,payment_authorize_on:"
+msgid "Payment Authorize On"
+msgstr "Paiement autoriser le"
+
+msgctxt "field:sale.configuration,payment_capture_on:"
+msgid "Payment Capture On"
+msgstr "Paiement capturé le"
+
+#, fuzzy
+msgctxt "field:sale.payment,amount:"
+msgid "Amount"
+msgstr "Montant"
+
+msgctxt "field:sale.payment,amount_authorized:"
+msgid "Amount Authorized"
+msgstr "Montant autorisé"
+
+msgctxt "field:sale.payment,amount_available:"
+msgid "Amount Remaining"
+msgstr "Montant restant"
+
+msgctxt "field:sale.payment,amount_captured:"
+msgid "Amount Captured"
+msgstr "Montant capturé"
+
+msgctxt "field:sale.payment,amount_consumed:"
+msgid "Amount Consumed"
+msgstr "Montant consommé"
+
+#, fuzzy
+msgctxt "field:sale.payment,create_date:"
+msgid "Create Date"
+msgstr "Date de création"
+
+#, fuzzy
+msgctxt "field:sale.payment,create_uid:"
+msgid "Create User"
+msgstr "Créé par "
+
+#, fuzzy
+msgctxt "field:sale.payment,currency_digits:"
+msgid "Currency Digits"
+msgstr "Décimales de la devise"
+
+msgctxt "field:sale.payment,gateway:"
+msgid "Gateway"
+msgstr "Passerelle"
+
+#, fuzzy
+msgctxt "field:sale.payment,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:sale.payment,method:"
+msgid "Payment Method"
+msgstr "Méthode de paiement"
+
+#, fuzzy
+msgctxt "field:sale.payment,party:"
+msgid "Party"
+msgstr "Tiers"
+
+msgctxt "field:sale.payment,payment_profile:"
+msgid "Payment Profile"
+msgstr "Profil de paiement"
+
+msgctxt "field:sale.payment,payment_transactions:"
+msgid "Payment Transactions"
+msgstr "Transactions de paiements"
+
+msgctxt "field:sale.payment,provider:"
+msgid "Payment Provider"
+msgstr "Fournisseur du paiement"
+
+#, fuzzy
+msgctxt "field:sale.payment,rec_name:"
+msgid "Name"
+msgstr "Nom"
+
+#, fuzzy
+msgctxt "field:sale.payment,reference:"
+msgid "Reference"
+msgstr "Référence"
+
+#, fuzzy
+msgctxt "field:sale.payment,sale:"
+msgid "Sale"
+msgstr "Vente"
+
+#, fuzzy
+msgctxt "field:sale.payment,sequence:"
+msgid "Sequence"
+msgstr "Séquence"
+
+#, fuzzy
+msgctxt "field:sale.payment,write_date:"
+msgid "Write Date"
+msgstr "Date de mise à jour"
+
+#, fuzzy
+msgctxt "field:sale.payment,write_uid:"
+msgid "Write User"
+msgstr "Mis à jour par"
+
+#, fuzzy
+msgctxt "field:sale.payment.add_view,amount:"
+msgid "Amount"
+msgstr "Montant"
+
+msgctxt "field:sale.payment.add_view,card_present:"
+msgid "Card is Present"
+msgstr "La carte est présente"
+
+msgctxt "field:sale.payment.add_view,csc:"
+msgid "Card Security Code (CVV/CVD)"
+msgstr "Cryptogramme visuel (CVV/CVD)"
+
+#, fuzzy
+msgctxt "field:sale.payment.add_view,currency_digits:"
+msgid "Currency Digits"
+msgstr "Décimales de la devise"
+
+msgctxt "field:sale.payment.add_view,expiry_month:"
+msgid "Expiry Month"
+msgstr "Mois d'expiration"
+
+msgctxt "field:sale.payment.add_view,expiry_year:"
+msgid "Expiry Year"
+msgstr "Année d'expiration"
+
+msgctxt "field:sale.payment.add_view,gateway:"
+msgid "Gateway"
+msgstr "Passerelle"
+
+#, fuzzy
+msgctxt "field:sale.payment.add_view,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:sale.payment.add_view,method:"
+msgid "Payment Gateway Method"
+msgstr "Passerelle du mode de paiement"
+
+msgctxt "field:sale.payment.add_view,number:"
+msgid "Card Number"
+msgstr "Numéro de carte"
+
+msgctxt "field:sale.payment.add_view,owner:"
+msgid "Card Owner"
+msgstr "Propriétaire de la carte"
+
+#, fuzzy
+msgctxt "field:sale.payment.add_view,party:"
+msgid "Party"
+msgstr "Tiers"
+
+msgctxt "field:sale.payment.add_view,payment_profile:"
+msgid "Payment Profile"
+msgstr "Profile de paiement"
+
+#, fuzzy
+msgctxt "field:sale.payment.add_view,reference:"
+msgid "Reference"
+msgstr "Référence"
+
+#, fuzzy
+msgctxt "field:sale.payment.add_view,sale:"
+msgid "Sale"
+msgstr "Vente"
+
+msgctxt "field:sale.payment.add_view,swipe_data:"
+msgid "Swipe Card"
+msgstr "Glissez la carte"
+
+msgctxt "field:sale.payment.add_view,use_existing_card:"
+msgid "Use existing Card?"
+msgstr "Utiliser une carte existante"
+
+msgctxt "field:sale.sale,gateway_transactions:"
+msgid "Gateway Transactions"
+msgstr "Passerelle de transaction"
+
+msgctxt "field:sale.sale,payment_authorize_on:"
+msgid "Payment Authorize On"
+msgstr "Paiement autoriser le"
+
+msgctxt "field:sale.sale,payment_authorized:"
+msgid "Payment Authorized"
+msgstr "Paiement autorisé"
+
+msgctxt "field:sale.sale,payment_available:"
+msgid "Payment Remaining"
+msgstr "Paiement restant"
+
+msgctxt "field:sale.sale,payment_capture_on:"
+msgid "Payment Captured On"
+msgstr "Paiement capturé le"
+
+msgctxt "field:sale.sale,payment_captured:"
+msgid "Payment Captured"
+msgstr "Paiement capturé"
+
+msgctxt "field:sale.sale,payment_collected:"
+msgid "Payment Collected"
+msgstr "Paiement collecté"
+
+msgctxt "field:sale.sale,payment_total:"
+msgid "Total Payment"
+msgstr "Paiement total"
+
+msgctxt "field:sale.sale,payments:"
+msgid "Payments"
+msgstr "Paiements"
+
+msgctxt "field:sale.sale,sorted_payments:"
+msgid "Payments"
+msgstr "Paiements"
+
+msgctxt "help:sale.payment.add_view,card_present:"
+msgid "If the card is present and the card can be swiped"
+msgstr "Si la carte est présente et si elle peut être glissée"
+
+msgctxt "help:sale.payment.add_view,csc:"
+msgid "CVD/CVV/CVN"
+msgstr "CVD/CVV/CVN"
+
+msgctxt "help:sale.sale,payment_authorized:"
+msgid "Amount authorized to be catured"
+msgstr "Montant autorisé a être capturer"
+
+msgctxt "help:sale.sale,payment_available:"
+msgid "Total value which is neither authorize nor captured"
+msgstr "Valeur totale qui n'est ni autorisée ni capturée"
+
+msgctxt "help:sale.sale,payment_captured:"
+msgid "Amount already captured"
+msgstr "Montant déjà capturé"
+
+msgctxt "help:sale.sale,payment_collected:"
+msgid "Total value of payments collected"
+msgstr "Total des paiements collectés"
+
+msgctxt "help:sale.sale,payment_total:"
+msgid "Total value of payments"
+msgstr "Valeur total des paiements"
+
+msgctxt "model:ir.action,name:act_sale_payment_form"
+msgid "Sale Payments"
+msgstr "Paiement de vente"
+
+msgctxt "model:ir.action,name:wizard_add_payment"
+msgid "Add Payment"
+msgstr "Ajout d'un paiement"
+
+msgctxt "model:ir.ui.menu,name:menu_sale_payment_form"
+msgid "Sale Payments"
+msgstr "Paiements de ventes"
+
+#, fuzzy
+msgctxt "model:sale.payment,name:"
+msgid "Payment"
+msgstr "Paiement"
+
+msgctxt "model:sale.payment.add_view,name:"
+msgid "View for adding Sale Payments"
+msgstr "Vue pour ajouter des paiements de ventes"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "01-January"
+msgstr "01-Janvier"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "02-February"
+msgstr "02-Février"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "03-March"
+msgstr "03-Mars"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "04-April"
+msgstr "04-Avril"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "05-May"
+msgstr "05-Mai"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "06-June"
+msgstr "06-Juin"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "07-July"
+msgstr "07-Juillet"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "08-August"
+msgstr "08-Août"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "09-September"
+msgstr "09-Septembre"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "10-October"
+msgstr "10-Octobre"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "11-November"
+msgstr "11-Novembre"
+
+msgctxt "selection:sale.payment.add_view,expiry_month:"
+msgid "12-December"
+msgstr "12-Décembre"
+
+msgctxt "view:sale.configuration:"
+msgid "Default Payment Capture Settings"
+msgstr "Paramètres par défaut de capture de paiements"
+
+msgctxt "view:sale.payment.add_view:"
+msgid "Add Payment"
+msgstr "Ajout d'un paiement"
+
+msgctxt "view:sale.payment.add_view:"
+msgid "Add Payment Profile"
+msgstr "Ajout d'un profile de paiement"
+
+msgctxt "view:sale.payment.add_view:"
+msgid "Card Information"
+msgstr "Information de la carte"
+
+msgctxt "view:sale.payment:"
+msgid "Payments"
+msgstr "Paiements"
+
+msgctxt "view:sale.sale:"
+msgid "Add Payment"
+msgstr "Ajout de paiement"
+
+msgctxt "view:sale.sale:"
+msgid "Payments"
+msgstr "Paiements"
+
+#, fuzzy
+msgctxt "wizard_button:sale.payment.add,payment_info,add:"
+msgid "Add"
+msgstr "Ajouter"
+
+#, fuzzy
+msgctxt "wizard_button:sale.payment.add,payment_info,end:"
+msgid "Cancel"
+msgstr "Annuler"

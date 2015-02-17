@@ -89,6 +89,15 @@ class Sale:
             help="Amount already captured"
         ), 'get_payment',
     )
+    payment_processing_state = fields.Selection([
+        (None, 'None'),
+        ('waiting_for_auth', 'Waiting For Authorization'),
+        ('waiting_for_capture', 'Waiting For Capture'),
+    ], "Payment Processing State", select=True, readonly=True)
+
+    @staticmethod
+    def default_payment_processing_state():
+        return None
 
     @classmethod
     def __setup__(cls):
@@ -110,7 +119,8 @@ class Sale:
                 "Amount remaining: %s\n"
                 "Payments: %s",
             "auth_before_capture":
-                "Payment authorization must happen before capture"
+                "Payment authorization must happen before capture",
+            "sale_payments_waiting": "Sale Payments are %s",
         })
 
     @classmethod
@@ -212,9 +222,26 @@ class Sale:
             key=lambda t: payment_method_priority.index(t.method)
         ))
 
+    def _raise_sale_payments_waiting(self):
+        Sale = Pool().get('sale.sale')
+
+        self.raise_user_error(
+            "sale_payments_waiting", (
+                dict(Sale.payment_processing_state.selection).get(
+                    self.sale.payment_processing_state
+                ),
+            )
+        )
+
     def authorize_payments(self, amount, description="Payment from sale"):
-        """Authorize sale payments
         """
+        Authorize sale payments. It actually creates payment transactions
+        corresponding to sale payments and set the payment processing state to
+        `waiting to auth`.
+        """
+        if self.payment_processing_state:
+            self._raise_sale_payments_waiting()
+
         if amount > self.payment_available:
             self.raise_user_error(
                 "insufficient_amount_to_authorize", error_args=(
@@ -224,25 +251,25 @@ class Sale:
                 )
             )
 
-        transactions = []
         for payment in self.sorted_payments:
             if not amount:
                 break
 
             if not payment.amount_available or payment.method == "manual":
+                # * if no amount available, continue to next.
+                # * manual payment need not to be authorized.
                 continue
 
             # The amount to authorize is the amount_available if the
             # amount_available is less than the amount we seek.
             authorize_amount = min(amount, payment.amount_available)
 
-            transactions.append(
-                payment.authorize(authorize_amount, description)
-            )
+            payment._create_payment_transaction(authorize_amount, description)
 
             amount -= authorize_amount
 
-        return transactions
+        self.payment_processing_state = "waiting_for_auth"
+        self.save()
 
     def capture_payments(self, amount, description="Payment from sale"):
         """Capture sale payments.
@@ -250,7 +277,8 @@ class Sale:
         * If existing authorizations exist, capture them
         * If not, capture available payments directly
         """
-        PaymentTransaction = Pool().get('payment_gateway.transaction')
+        if self.payment_processing_state:
+            self._raise_sale_payments_waiting()
 
         if amount > (self.payment_available + self.payment_authorized):
             self.raise_user_error(
@@ -261,7 +289,6 @@ class Sale:
                 )
             )
 
-        txns_to_settle = []
         authorized_transactions = filter(
             lambda transaction: transaction.state == 'authorized',
             self.gateway_transactions
@@ -276,7 +303,6 @@ class Sale:
             # required to be captured
             transaction.amount = capture_amount
             transaction.save()
-            txns_to_settle.append(transaction)
 
             amount -= capture_amount
 
@@ -291,14 +317,14 @@ class Sale:
             # amount_available is less than the amount we seek.
             authorize_amount = min(amount, payment.amount_available)
 
-            txns_to_settle.append(
-                payment.authorize(authorize_amount, description)
+            payment._create_payment_transaction(
+                authorize_amount, description
             )
 
             amount -= authorize_amount
 
-        PaymentTransaction.settle(txns_to_settle)
-        return txns_to_settle
+        self.payment_processing_state = "waiting_for_capture"
+        self.save()
 
     def handle_payment_on_confirm(self):
         if self.payment_capture_on == 'sale_confirm':
@@ -320,22 +346,14 @@ class Sale:
         separated into a different method so downstream modules can change this
         behavior to adapt to different workflows
         """
-        PaymentTransaction = Pool().get('payment_gateway.transaction')
-
-        # first settle existing manual authorized txns. Capturing them
-        # directly will create new ones.
-        txns_to_settle = filter(
-            lambda txn: txn.state == 'authorized' and txn.method == 'manual',
-            self.gateway_transactions
-        )
-        PaymentTransaction.settle(txns_to_settle)
-
         for payment in self.payments:
-            if payment.amount_available and payment.method == "manual":
-                payment.capture(
+            if payment.amount_available and payment.method == "manual" and \
+                    not payment.payment_transactions:
+                payment._create_payment_transaction(
                     payment.amount_available,
-                    'Post manual payments on Processing Order'
+                    'Post manual payments on Processing Order',
                 )
+                payment.capture()
 
     @classmethod
     @ModelView.button
@@ -428,18 +446,51 @@ class Sale:
 
         PaymentTransaction.capture([payment_transaction])
 
+    @classmethod
+    def complete_payments(cls):
+        """Cron method authorizes waiting payments.
+        """
+        PaymentTransaction = Pool().get('payment_gateway.transaction')
+
+        sales = cls.search([
+            ('payment_processing_state', '!=', None)
+        ])
+
+        for sale in sales:
+            if sale.payment_processing_state == "waiting_for_auth":
+                for payment in sale.sorted_payments:
+                    payment.authorize()
+
+            else:
+                # Transactions waiting for capture.
+                txns = PaymentTransaction.search([
+                    ('sale_payment.sale', '=', sale.id),
+                ])
+
+                # Settle authorized transactions
+                PaymentTransaction.settle(filter(
+                    lambda txn: txn.state == 'authorized', txns
+                ))
+
+                # Capture other transactions
+                PaymentTransaction.capture(filter(
+                    lambda txn: txn.state == "draft", txns
+                ))
+
+            sale.payment_processing_state = None
+            sale.save()
+
 
 class PaymentTransaction:
     "Gateway Transaction"
     __name__ = 'payment_gateway.transaction'
 
     sale_payment = fields.Many2One(
-        'sale.payment', 'Sale Payment', required=True, ondelete='RESTRICT',
-        select=True,
+        'sale.payment', 'Sale Payment', ondelete='RESTRICT', select=True,
     )
 
     def get_shipping_address(self, name):
-        return self.sale_payment.sale and \
+        return self.sale_payment and self.sale_payment.sale and \
             self.sale_payment.sale.shipment_address.id
 
 
