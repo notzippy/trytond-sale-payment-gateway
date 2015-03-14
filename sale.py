@@ -228,7 +228,7 @@ class Sale:
         self.raise_user_error(
             "sale_payments_waiting", (
                 dict(Sale.payment_processing_state.selection).get(
-                    self.sale.payment_processing_state
+                    self.payment_processing_state
                 ),
             )
         )
