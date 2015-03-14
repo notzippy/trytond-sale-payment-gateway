@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <data>
     <xpath expr="/form/notebook" position="inside">
-        <page name="payments" string="Payments">
+        <page id="payments" string="Payments">
             <button name="add_payment" colspan="4" string="Add Payment"/>
             <label name="payment_authorize_on"/>
             <field name="payment_authorize_on"/>

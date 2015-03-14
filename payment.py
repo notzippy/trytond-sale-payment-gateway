@@ -179,20 +179,21 @@ class Payment(ModelSQL, ModelView):
         PaymentTransaction = Pool().get('payment_gateway.transaction')
         Date = Pool().get('ir.date')
 
-        return PaymentTransaction.create([{
-            'description': description or 'Auto charge from sale',
-            'date': Date.today(),
-            'party': self.sale.party,
-            'payment_profile': self.payment_profile,
-            'address': (
+        return PaymentTransaction(
+            description=description or 'Auto charge from sale',
+            date=Date.today(),
+            party=self.sale.party,
+            payment_profile=self.payment_profile,
+            address=(
                 self.payment_profile and
-                self.payment_profile.address or self.sale.invoice_address),
-            'amount': self.sale.currency.round(amount),
-            'currency': self.sale.currency,
-            'gateway': self.gateway,
-            'sale_payment': self.id,
-            'provider_reference': self.reference,
-        }])[0]
+                self.payment_profile.address or self.sale.invoice_address
+            ),
+            amount=self.sale.currency.round(amount),
+            currency=self.sale.currency,
+            gateway=self.gateway,
+            sale_payment=self.id,
+            provider_reference=self.reference,
+        )
 
     def authorize(self):
         """Authorize all the transactions associated with the payment.
