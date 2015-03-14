@@ -264,7 +264,10 @@ class Sale:
             # amount_available is less than the amount we seek.
             authorize_amount = min(amount, payment.amount_available)
 
-            payment._create_payment_transaction(authorize_amount, description)
+            payment_transaction = payment._create_payment_transaction(
+                authorize_amount, description
+            )
+            payment_transaction.save()
 
             amount -= authorize_amount
 
@@ -317,9 +320,10 @@ class Sale:
             # amount_available is less than the amount we seek.
             authorize_amount = min(amount, payment.amount_available)
 
-            payment._create_payment_transaction(
+            payment_transaction = payment._create_payment_transaction(
                 authorize_amount, description
             )
+            payment_transaction.save()
 
             amount -= authorize_amount
 
@@ -349,10 +353,11 @@ class Sale:
         for payment in self.payments:
             if payment.amount_available and payment.method == "manual" and \
                     not payment.payment_transactions:
-                payment._create_payment_transaction(
+                payment_transaction = payment._create_payment_transaction(
                     payment.amount_available,
                     'Post manual payments on Processing Order',
                 )
+                payment_transaction.save()
                 payment.capture()
 
     @classmethod
@@ -632,14 +637,14 @@ class AddSalePayment(Wizard):
         """
         SalePayment = Pool().get('sale.payment')
 
-        SalePayment.create([{
-            'sale': Transaction().context.get('active_id'),
-            'party': self.payment_info.party,
-            'gateway': self.payment_info.gateway,
-            'payment_profile': profile,
-            'amount': self.payment_info.amount,
-            'reference': self.payment_info.reference or None,
-        }])
+        return SalePayment(
+            sale=Transaction().context.get('active_id'),
+            party=self.payment_info.party,
+            gateway=self.payment_info.gateway,
+            payment_profile=profile,
+            amount=self.payment_info.amount,
+            reference=self.payment_info.reference or None,
+        )
 
     def create_payment_profile(self):
         """
@@ -678,5 +683,6 @@ class AddSalePayment(Wizard):
         ):
             profile = self.create_payment_profile()
 
-        self.create_sale_payment(profile=profile)
+        payment = self.create_sale_payment(profile=profile)
+        payment.save()
         return 'end'
