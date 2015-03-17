@@ -6,9 +6,6 @@
     :license: BSD, see LICENSE for more details.
 """
 import os
-if 'DB_NAME' not in os.environ:
-    os.environ['TRYTOND_DATABASE_URI'] = 'sqlite://'
-    os.environ['DB_NAME'] = ':memory:'
 import unittest
 import datetime
 from decimal import Decimal
@@ -20,6 +17,10 @@ import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
 from trytond.exceptions import UserError
+
+if 'DB_NAME' not in os.environ:
+    os.environ['TRYTOND_DATABASE_URI'] = 'sqlite://'
+    os.environ['DB_NAME'] = ':memory:'
 
 
 class BaseTestCase(unittest.TestCase):
