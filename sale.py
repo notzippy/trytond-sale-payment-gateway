@@ -512,6 +512,8 @@ class AddSalePaymentView(BaseCreditCardViewMixin, ModelView):
     party = fields.Many2One('party.party', 'Party', readonly=True)
     gateway = fields.Many2One(
         'payment_gateway.gateway', 'Gateway', required=True,
+        domain=[('users', '=', Eval('user'))],
+        depends=['user']
     )
     currency_digits = fields.Function(
         fields.Integer('Currency Digits'),
@@ -546,6 +548,9 @@ class AddSalePaymentView(BaseCreditCardViewMixin, ModelView):
         'Reference', states={
             'invisible': Not(Eval('method') == 'manual'),
         }
+    )
+    user = fields.Many2One(
+        "res.user", "Tryton User", readonly=True
     )
 
     @classmethod
@@ -628,6 +633,7 @@ class AddSalePayment(Wizard):
             'owner': sale.party.name,
             'currency_digits': sale.currency_digits,
             'amount': sale.total_amount - sale.payment_total,
+            'user': Transaction().user,
         }
         return res
 
