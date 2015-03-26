@@ -76,7 +76,7 @@ class Payment(ModelSQL, ModelView):
         states={
             'required': Eval('method') == 'credit_card'
         },
-        ondelete='RESTRICT', depends=['party', 'gateway'],
+        ondelete='RESTRICT', depends=['party', 'gateway', 'method'],
     )
     method = fields.Function(fields.Char('Payment Method'), 'get_method')
     provider = fields.Function(fields.Char('Payment Provider'), 'get_provider')
