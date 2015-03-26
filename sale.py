@@ -488,7 +488,7 @@ class Sale:
         ])
 
         for sale in sales:
-            sale.process_payments()
+            sale.process_pending_payments()
 
 
 class PaymentTransaction:
