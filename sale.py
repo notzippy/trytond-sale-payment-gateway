@@ -251,6 +251,7 @@ class Sale:
                 )
             )
 
+        transactions = []
         for payment in self.sorted_payments:
             if not amount:
                 break
@@ -271,8 +272,12 @@ class Sale:
 
             amount -= authorize_amount
 
+            transactions.append(payment_transaction)
+
         self.payment_processing_state = "waiting_for_auth"
         self.save()
+
+        return transactions
 
     def capture_payments(self, amount, description="Payment from sale"):
         """Capture sale payments.
@@ -292,6 +297,7 @@ class Sale:
                 )
             )
 
+        transactions = []
         authorized_transactions = filter(
             lambda transaction: transaction.state == 'authorized',
             self.gateway_transactions
@@ -308,6 +314,8 @@ class Sale:
             transaction.save()
 
             amount -= capture_amount
+
+            transactions.append(transaction)
 
         for payment in self.sorted_payments:
             if not amount:
@@ -327,8 +335,12 @@ class Sale:
 
             amount -= authorize_amount
 
+            transactions.append(payment_transaction)
+
         self.payment_processing_state = "waiting_for_capture"
         self.save()
+
+        return transactions
 
     def handle_payment_on_confirm(self):
         if self.payment_capture_on == 'sale_confirm':
