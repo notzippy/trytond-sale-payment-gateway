@@ -26,8 +26,8 @@
             <field name="model">sale.sale,-1</field>
             <field name="action" ref="act_sale_relate"/>
         </record>
-        <record model="ir.cron" id="cron_complete_payments_iternal">
-            <field name="name">Complete Payments</field>
+        <record model="ir.cron" id="cron_process_all_pending_iternal">
+            <field name="name">Process all pending payments</field>
             <field name="request_user" ref="res.user_admin"/>
             <field name="user" ref="res.user_trigger"/>
             <field name="active" eval="True"/>
@@ -36,7 +36,7 @@
             <field name="number_calls" eval="-1"/>
             <field name="repeat_missed" eval="False"/>
             <field name="model">sale.sale</field>
-            <field name="function">complete_payments</field>
+            <field name="function">process_all_pending_payments</field>
         </record>
     </data>
 </tryton>
