@@ -451,39 +451,44 @@ class Sale:
 
         PaymentTransaction.capture([payment_transaction])
 
-    @classmethod
-    def complete_payments(cls):
-        """Cron method authorizes waiting payments.
+    def process_pending_payments(self):
+        """Process waiting payments for corresponding sale.
         """
         PaymentTransaction = Pool().get('payment_gateway.transaction')
 
+        if self.payment_processing_state == "waiting_for_auth":
+            for payment in self.sorted_payments:
+                payment.authorize()
+
+        else:
+            # Transactions waiting for capture.
+            txns = PaymentTransaction.search([
+                ('sale_payment.sale', '=', self.id),
+            ])
+
+            # Settle authorized transactions
+            PaymentTransaction.settle(filter(
+                lambda txn: txn.state == 'authorized', txns
+            ))
+
+            # Capture other transactions
+            PaymentTransaction.capture(filter(
+                lambda txn: txn.state == "draft", txns
+            ))
+
+        self.payment_processing_state = None
+        self.save()
+
+    @classmethod
+    def process_all_pending_payments(cls):
+        """Cron method authorizes waiting payments.
+        """
         sales = cls.search([
             ('payment_processing_state', '!=', None)
         ])
 
         for sale in sales:
-            if sale.payment_processing_state == "waiting_for_auth":
-                for payment in sale.sorted_payments:
-                    payment.authorize()
-
-            else:
-                # Transactions waiting for capture.
-                txns = PaymentTransaction.search([
-                    ('sale_payment.sale', '=', sale.id),
-                ])
-
-                # Settle authorized transactions
-                PaymentTransaction.settle(filter(
-                    lambda txn: txn.state == 'authorized', txns
-                ))
-
-                # Capture other transactions
-                PaymentTransaction.capture(filter(
-                    lambda txn: txn.state == "draft", txns
-                ))
-
-            sale.payment_processing_state = None
-            sale.save()
+            sale.process_payments()
 
 
 class PaymentTransaction:

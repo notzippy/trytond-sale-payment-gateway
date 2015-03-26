@@ -337,13 +337,13 @@ class TestSale(BaseTestCase):
         """Confirm sale and complete payments.
         """
         self.Sale.confirm(sales)
-        self.Sale.complete_payments()
+        self.Sale.process_all_pending_payments()
 
     def _process_sale_by_completing_payments(self, sales):
         """Process sale and complete payments.
         """
         self.Sale.proceed(sales)
-        self.Sale.complete_payments()
+        self.Sale.process_all_pending_payments()
 
     def test_0005_single_payment_CASE1(self):
         """
