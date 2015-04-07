@@ -200,7 +200,12 @@ class Payment(ModelSQL, ModelView):
         """
         PaymentTransaction = Pool().get('payment_gateway.transaction')
 
-        PaymentTransaction.authorize(self.payment_transactions)
+        PaymentTransaction.authorize(
+            filter(
+                lambda txn: txn.state == 'draft',
+                self.payment_transactions
+            )
+        )
 
     def capture(self):
         """
@@ -208,7 +213,12 @@ class Payment(ModelSQL, ModelView):
         """
         PaymentTransaction = Pool().get('payment_gateway.transaction')
 
-        PaymentTransaction.capture(self.payment_transactions)
+        PaymentTransaction.capture(
+            filter(
+                lambda txn: txn.state in ('draft', 'authorized', 'in-progress'),
+                self.payment_transactions
+            )
+        )
 
     @classmethod
     def delete(cls, payments):

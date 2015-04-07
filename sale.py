@@ -471,8 +471,9 @@ class Sale:
         if self.payment_processing_state == "waiting_for_auth":
             for payment in self.sorted_payments:
                 payment.authorize()
+            self.payment_processing_state = None
 
-        else:
+        elif self.payment_processing_state == "waiting_for_capture":
             # Transactions waiting for capture.
             txns = PaymentTransaction.search([
                 ('sale_payment.sale', '=', self.id),
@@ -488,7 +489,10 @@ class Sale:
                 lambda txn: txn.state == "draft", txns
             ))
 
-        self.payment_processing_state = None
+            self.payment_processing_state = None
+        else:
+            # Weird! Why was I called if there is nothing to do
+            return
         self.save()
 
     @classmethod
