@@ -1337,6 +1337,28 @@ class TestSale(BaseTestCase):
             # that.
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
+    def test_0090_test_duplicate_sale(self):
+        """
+        Test if payment_processing_state is not copied in duplicate sales
+        """
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
+            self.setup_defaults()
+
+            sale = self._create_sale(
+                payment_authorize_on='sale_confirm',
+                payment_capture_on='sale_process',
+            )
+            sale.payment_processing_state = 'waiting_for_capture'
+            sale.save()
+
+            self.assertEqual(
+                sale.payment_processing_state, 'waiting_for_capture')
+
+            new_sales = self.Sale.copy([sale])
+            self.assertTrue(new_sales)
+            self.assertEqual(len(new_sales), 1)
+            self.assertIsNone(new_sales[0].payment_processing_state)
+
 
 def suite():
     """

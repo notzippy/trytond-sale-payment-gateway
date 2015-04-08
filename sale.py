@@ -506,6 +506,18 @@ class Sale:
         for sale in sales:
             sale.process_pending_payments()
 
+    @classmethod
+    def copy(cls, records, default=None):
+        """
+        Duplicating records
+        """
+        if default is None:
+            default = {}
+
+        default['payment_processing_state'] = None
+
+        return super(Sale, cls).copy(records, default)
+
 
 class PaymentTransaction:
     "Gateway Transaction"
