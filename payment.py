@@ -85,6 +85,9 @@ class Payment(ModelSQL, ModelView):
             'invisible': Not(Eval('method') == 'manual'),
         }
     )
+    description = fields.Function(
+        fields.Char('Description'), 'get_payment_description'
+    )
 
     def get_rec_name(self, name):
         if self.payment_profile:
@@ -230,3 +233,16 @@ class Payment(ModelSQL, ModelView):
                 cls.raise_user_error("cannot_delete_payment")
 
         super(Payment, cls).delete(payments)
+
+    def get_payment_description(self, name):
+        """
+        Return a short description of the sale payment
+        This can be used in documents to show payment details
+        """
+        if self.method == 'manual':
+            return "Paid by Cash"
+        elif self.method == 'credit_card':
+            return (
+                "Paid by Card " + "(" + ("xxxx " * 3) +
+                self.payment_profile.last_4_digits + ")"
+            )
