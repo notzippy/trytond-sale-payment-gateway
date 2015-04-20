@@ -378,6 +378,7 @@ class TestSale(BaseTestCase):
                 'gateway': self.dummy_gateway,
                 'payment_profile': self.dummy_cc_payment_profile.id
             }])
+            self.assertTrue(payment.description.startswith("Paid by Card"))
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
@@ -861,7 +862,7 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_available, Decimal('0'))
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
-            self.SalePayment.create([{
+            payment_1, payment_2 = self.SalePayment.create([{
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.cash_gateway,
@@ -871,6 +872,7 @@ class TestSale(BaseTestCase):
                 'gateway': self.dummy_gateway,
                 'payment_profile': self.dummy_cc_payment_profile.id
             }])
+            self.assertTrue(payment_1.description.startswith("Paid by Cash"))
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
