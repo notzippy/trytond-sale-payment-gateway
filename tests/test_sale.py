@@ -1360,6 +1360,7 @@ class TestSale(BaseTestCase):
             self.assertTrue(new_sales)
             self.assertEqual(len(new_sales), 1)
             self.assertIsNone(new_sales[0].payment_processing_state)
+            self.assertFalse(new_sales[0].payments)
 
 
 def suite():
