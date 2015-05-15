@@ -515,6 +515,7 @@ class Sale:
             default = {}
 
         default['payment_processing_state'] = None
+        default['payments'] = []
 
         return super(Sale, cls).copy(records, default)
 
