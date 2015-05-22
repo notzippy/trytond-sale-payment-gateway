@@ -9,7 +9,12 @@ from decimal import Decimal
 
 from trytond.model import ModelSQL, ModelView, fields
 from trytond.pool import PoolMeta, Pool
-from trytond.pyson import Eval, Not
+from trytond.pyson import Eval, Not, If
+from trytond.transaction import Transaction
+from trytond import backend
+
+from sql.functions import Trim, Substring
+from sql.operators import Concat
 
 __all__ = ['Payment']
 __metaclass__ = PoolMeta
@@ -89,6 +94,21 @@ class Payment(ModelSQL, ModelView):
         fields.Char('Description'), 'get_payment_description'
     )
 
+    company = fields.Function(
+        fields.Many2One(
+            'company.company', 'Company',
+            domain=[
+                ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+                    Eval('context', {}).get('company', -1)),
+            ],
+        ),
+        getter='on_change_with_company',
+        searcher='search_company',
+    )
+    credit_account = fields.Many2One(
+        'account.account', 'Credit Account', required=True
+    )
+
     def get_rec_name(self, name):
         if self.payment_profile:
             return "%s - %s - %s" % (
@@ -109,6 +129,64 @@ class Payment(ModelSQL, ModelView):
         return self.gateway and self.gateway.method or None
 
     @classmethod
+    def __register__(cls, module_name):
+        Party = Pool().get('party.party')
+        Sale = Pool().get('sale.sale')
+        Model = Pool().get('ir.model')
+        ModelField = Pool().get('ir.model.field')
+        Property = Pool().get('ir.property')
+        TableHandler = backend.get('TableHandler')
+        cursor = Transaction().cursor
+        table = TableHandler(cursor, cls, module_name)
+
+        migration_needed = False
+        if not table.column_exist('credit_account'):
+            migration_needed = True
+
+        super(Payment, cls).__register__(module_name)
+
+        if migration_needed and not Pool.test:
+            # Migration
+            # Set party's receivable account as the credit_account on
+            # sale payments
+            payment = cls.__table__()
+            party = Party.__table__()
+            property = Property.__table__()
+            sale = Sale.__table__()
+
+            account_model, = Model.search([
+                ('model', '=', 'party.party'),
+            ])
+            account_receivable_field, = ModelField.search([
+                ('model', '=', account_model.id),
+                ('name', '=', 'account_receivable'),
+                ('ttype', '=', 'many2one'),
+            ])
+
+            update = payment.update(
+                columns=[payment.credit_account],
+                values=[
+                    Trim(
+                        Substring(property.value, ',.*'), 'LEADING', ','
+                    ).cast(cls.credit_account.sql_type().base)
+                ],
+                from_=[sale, party, property],
+                where=(
+                    payment.sale == sale.id
+                ) & (
+                    sale.party == party.id
+                ) & (
+                    property.res == Concat(Party.__name__ + ',', party.id)
+                ) & (
+                    property.field == account_receivable_field.id
+                ) & (
+                    property.company == sale.company
+                )
+
+            )
+            cursor.execute(*update)
+
+    @classmethod
     def __setup__(cls):
         super(Payment, cls).__setup__()
 
@@ -117,6 +195,21 @@ class Payment(ModelSQL, ModelView):
                 "Payment cannot be deleted as placeholder for amount consumed "
                 "has already been consumed.",
         })
+
+        cls.credit_account.domain = [
+            ('company', '=', Eval('company', -1)),
+            ('kind', 'in', cls._credit_account_domain())
+        ]
+        cls.credit_account.depends = ['company']
+
+    @fields.depends('sale')
+    def on_change_with_credit_account(self, name=None):
+        if self.sale and self.sale.party:
+            return self.sale.party.account_receivable
+
+    @fields.depends('sale')
+    def on_change_with_company(self, name=None):
+        return self.sale and self.sale.company.id or None
 
     @fields.depends('sale')
     def on_change_with_party(self, name=None):
@@ -127,6 +220,13 @@ class Payment(ModelSQL, ModelView):
         if self.sale.currency:
             return self.sale.currency.digits
         return 2
+
+    @classmethod
+    def search_company(cls, name, clause):
+        """
+        Searcher for field delivery_date
+        """
+        return [('sale.company', ) + tuple(clause[1:])]
 
     def get_amount(self, name):
         """Getter method for fetching amounts.
@@ -186,6 +286,7 @@ class Payment(ModelSQL, ModelView):
             description=description or 'Auto charge from sale',
             date=Date.today(),
             party=self.sale.party,
+            credit_account=self.credit_account,
             payment_profile=self.payment_profile,
             address=(
                 self.payment_profile and
@@ -246,3 +347,10 @@ class Payment(ModelSQL, ModelView):
                 "Paid by Card " + "(" + ("xxxx " * 3) +
                 self.payment_profile.last_4_digits + ")"
             )
+
+    @classmethod
+    def _credit_account_domain(cls):
+        """
+        Return a list of account kind
+        """
+        return ['receivable']

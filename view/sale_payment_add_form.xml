@@ -1,6 +1,11 @@
 <form string="Add Payment" col="4">
+    <field name="company" colspan="4" invisible="1"/>
+    <newline />
     <label name="gateway"/>
     <field name="gateway" widget="selection" colspan="3"/>
+    <newline />
+    <label name="credit_account"/>
+    <field name="credit_account" colspan="3"/>
     <newline />
     <label name="amount"/>
     <field name="amount"/>
