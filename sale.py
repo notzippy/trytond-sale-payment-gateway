@@ -10,7 +10,7 @@ from decimal import Decimal
 from trytond.model import ModelView, fields, Workflow
 from trytond.pool import PoolMeta, Pool
 from trytond.transaction import Transaction
-from trytond.pyson import Eval, Bool, And, Not, Or
+from trytond.pyson import Eval, Bool, And, Not, Or, If
 from trytond.wizard import Wizard, StateView, StateTransition, Button
 
 from trytond.modules.payment_gateway.transaction import BaseCreditCardViewMixin
@@ -587,6 +587,17 @@ class AddSalePaymentView(BaseCreditCardViewMixin, ModelView):
         "res.user", "Tryton User", readonly=True
     )
 
+    company = fields.Many2One(
+        'company.company', 'Company', readonly=True, required=True,
+        domain=[
+            ('id', If(Eval('context', {}).contains('company'), '=', '!='),
+                Eval('context', {}).get('company', -1)),
+        ],
+    )
+    credit_account = fields.Many2One(
+        'account.account', 'Credit Account', required=True
+    )
+
     @classmethod
     def __setup__(cls):
         super(AddSalePaymentView, cls).__setup__()
@@ -620,6 +631,12 @@ class AddSalePaymentView(BaseCreditCardViewMixin, ModelView):
         cls.swipe_data.states = {'invisible': INV}
         cls.swipe_data.depends = ['method']
 
+        cls.credit_account.domain = [
+            ('company', '=', Eval('company', -1)),
+            ('kind', 'in', cls._credit_account_domain())
+        ]
+        cls.credit_account.depends = ['company']
+
     def get_currency_digits(self, name):
         return self.sale.currency_digits if self.sale else 2
 
@@ -636,6 +653,13 @@ class AddSalePaymentView(BaseCreditCardViewMixin, ModelView):
                 'method': self.gateway.method,
             }
         return {}
+
+    @classmethod
+    def _credit_account_domain(cls):
+        """
+        Return a list of account kind
+        """
+        return ['receivable']
 
 
 class AddSalePayment(Wizard):
@@ -663,7 +687,9 @@ class AddSalePayment(Wizard):
 
         res = {
             'sale': sale.id,
+            'company': sale.company.id,
             'party': sale.party.id,
+            'credit_account': sale.party.account_receivable.id,
             'owner': sale.party.name,
             'currency_digits': sale.currency_digits,
             'amount': sale.total_amount - sale.payment_total,
@@ -679,6 +705,7 @@ class AddSalePayment(Wizard):
 
         return SalePayment(
             sale=Transaction().context.get('active_id'),
+            credit_account=self.payment_info.credit_account,
             party=self.payment_info.party,
             gateway=self.payment_info.gateway,
             payment_profile=profile,

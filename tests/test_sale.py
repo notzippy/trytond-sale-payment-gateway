@@ -372,13 +372,25 @@ class TestSale(BaseTestCase):
             self.assertEqual(sale.payment_authorized, Decimal('0'))
 
             # Create a payment
-            payment, = self.SalePayment.create([{
+            payment_details = {
                 'sale': sale.id,
                 'amount': Decimal('200'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
-            }])
+                'payment_profile': self.dummy_cc_payment_profile.id,
+            }
+            payment_details.update({
+                'credit_account':
+                    self.SalePayment(
+                        **payment_details).on_change_with_credit_account()
+            })
+            payment = self.SalePayment(**payment_details)
+            payment.save()
+
             self.assertTrue(payment.description.startswith("Paid by Card"))
+            self.assertTrue(payment.credit_account)
+            self.assertEqual(
+                payment.credit_account, self.party.account_receivable)
+            self.assertEqual(payment.company.id, sale.company.id)
 
             self.assertEqual(sale.payment_total, Decimal('200'))
             self.assertEqual(sale.payment_available, Decimal('200'))
@@ -430,7 +442,8 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('200'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -488,7 +501,8 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('200'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -547,7 +561,8 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('200'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -606,7 +621,8 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('200'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -666,7 +682,8 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('200'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -724,7 +741,8 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('200'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -804,7 +822,8 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('200'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -866,11 +885,13 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.cash_gateway,
+                'credit_account': self.party.account_receivable.id,
             }, {
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
             self.assertTrue(payment_1.description.startswith("Paid by Cash"))
 
@@ -924,11 +945,13 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.cash_gateway,
+                'credit_account': self.party.account_receivable.id,
             }, {
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -987,11 +1010,13 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.cash_gateway,
+                'credit_account': self.party.account_receivable.id,
             }, {
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -1050,11 +1075,13 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.cash_gateway,
+                'credit_account': self.party.account_receivable.id,
             }, {
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -1113,11 +1140,13 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.cash_gateway,
+                'credit_account': self.party.account_receivable.id,
             }, {
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -1178,11 +1207,13 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.cash_gateway,
+                'credit_account': self.party.account_receivable.id,
             }, {
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -1241,11 +1272,13 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.cash_gateway,
+                'credit_account': self.party.account_receivable.id,
             }, {
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -1304,11 +1337,13 @@ class TestSale(BaseTestCase):
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.cash_gateway,
+                'credit_account': self.party.account_receivable.id,
             }, {
                 'sale': sale.id,
                 'amount': Decimal('100'),
                 'gateway': self.dummy_gateway,
-                'payment_profile': self.dummy_cc_payment_profile.id
+                'payment_profile': self.dummy_cc_payment_profile.id,
+                'credit_account': self.party.account_receivable.id,
             }])
 
             self.assertEqual(sale.payment_total, Decimal('200'))
@@ -1361,6 +1396,150 @@ class TestSale(BaseTestCase):
             self.assertEqual(len(new_sales), 1)
             self.assertIsNone(new_sales[0].payment_processing_state)
             self.assertFalse(new_sales[0].payments)
+
+    def test_0100_test_sale_payment_wizard(self):
+        """
+        Test the wizard used to create sale payments
+        """
+        SalePayment = POOL.get('sale.payment')
+        SalePaymentWizard = POOL.get('sale.payment.add', type="wizard")
+        PaymentProfile = POOL.get('party.payment_profile')
+
+        with Transaction().start(DB_NAME, USER, context=CONTEXT):
+            self.setup_defaults()
+
+            sale = self._create_sale(
+                payment_authorize_on='sale_process',
+                payment_capture_on='sale_process',
+            )
+
+            # Case I: Manual Payment
+            sale_payment_wizard1 = SalePaymentWizard(
+                SalePaymentWizard.create()[0]
+            )
+
+            # Test default_payment_info
+            with Transaction().set_context(active_id=sale.id):
+                defaults = sale_payment_wizard1.default_payment_info()
+                self.assertEqual(defaults['sale'], sale.id)
+                self.assertEqual(defaults['party'], sale.party.id)
+                self.assertEqual(
+                    defaults['currency_digits'], sale.currency_digits
+                )
+
+            sale_payment_wizard1.payment_info.sale = sale.id
+            sale_payment_wizard1.payment_info.credit_account = \
+                sale.party.account_receivable.id
+            sale_payment_wizard1.payment_info.party = sale.party.id
+            sale_payment_wizard1.payment_info.gateway = self.cash_gateway.id
+            sale_payment_wizard1.payment_info.method = self.cash_gateway.method
+            sale_payment_wizard1.payment_info.amount = 100
+            sale_payment_wizard1.payment_info.payment_profile = None
+            sale_payment_wizard1.payment_info.currency_digits = \
+                sale_payment_wizard1.payment_info.get_currency_digits(
+                    name='currency_digits'
+                )
+            sale_payment_wizard1.payment_info.reference = 'Reference-1'
+            sale_payment_wizard1.payment_info.gift_card = None
+
+            with Transaction().set_context(active_id=sale.id):
+                sale_payment_wizard1.transition_add()
+
+            payment1, = SalePayment.search([
+                ('sale', '=', sale.id),
+                ('company', '=', self.company.id),
+            ], limit=1)
+            self.assertEqual(payment1.amount, 100)
+            self.assertEqual(payment1.party, sale.party)
+            self.assertEqual(payment1.method, self.cash_gateway.method)
+            self.assertEqual(payment1.provider, self.cash_gateway.provider)
+            self.assertEqual(payment1.reference, 'Reference-1')
+
+            # Case II: Credit Card Payment with new payment profile
+            sale_payment_wizard2 = SalePaymentWizard(
+                SalePaymentWizard.create()[0]
+            )
+
+            # Test if party has 1 payment profile already created
+            payment_profiles = PaymentProfile.search([
+                ('party', '=', sale.party.id)
+            ])
+            self.assertEqual(len(payment_profiles), 1)
+
+            sale_payment_wizard2.payment_info.sale = sale.id
+            sale_payment_wizard2.payment_info.credit_account = \
+                sale.party.account_receivable.id
+            sale_payment_wizard2.payment_info.party = sale.party.id
+            sale_payment_wizard2.payment_info.gateway = self.dummy_gateway.id
+            sale_payment_wizard2.payment_info.method = \
+                sale_payment_wizard2.payment_info.get_method()
+            sale_payment_wizard2.payment_info.use_existing_card = False
+            sale_payment_wizard2.payment_info.amount = 55
+            sale_payment_wizard2.payment_info.owner = sale.party.name
+            sale_payment_wizard2.payment_info.number = '4111111111111111'
+            sale_payment_wizard2.payment_info.expiry_month = '01'
+            sale_payment_wizard2.payment_info.expiry_year = '2018'
+            sale_payment_wizard2.payment_info.csc = '911'
+            sale_payment_wizard2.payment_info.payment_profile = None
+            sale_payment_wizard2.payment_info.reference = 'Reference-2'
+            sale_payment_wizard2.payment_info.gift_card = None
+
+            with Transaction().set_context(active_id=sale.id):
+                sale_payment_wizard2.transition_add()
+
+            payment2, = SalePayment.search([
+                ('sale', '=', sale.id),
+                ('amount', '=', 55),
+                ('company', '=', self.company.id),
+            ], limit=1)
+            self.assertEqual(payment2.method, self.dummy_gateway.method)
+            self.assertEqual(payment2.provider, self.dummy_gateway.provider)
+
+            # Test if new payment profile was created for party
+            new_payment_profile = PaymentProfile.search([
+                ('party', '=', sale.party.id)
+            ], order=[('id', 'DESC')])
+            self.assertEqual(len(new_payment_profile), 2)
+            self.assertEqual(
+                new_payment_profile[0], payment2.payment_profile
+            )
+
+            # Case III: Credit Card Payment with existing card
+            sale_payment_wizard3 = SalePaymentWizard(
+                SalePaymentWizard.create()[0]
+            )
+
+            sale_payment_wizard3.payment_info.sale = sale.id
+            sale_payment_wizard3.payment_info.credit_account = \
+                sale.party.account_receivable.id
+            sale_payment_wizard3.payment_info.party = sale.party.id
+            sale_payment_wizard3.payment_info.gateway = self.dummy_gateway.id
+            sale_payment_wizard3.payment_info.method = self.dummy_gateway.method
+            sale_payment_wizard3.payment_info.use_existing_card = True
+            sale_payment_wizard3.payment_info.amount = 45
+            sale_payment_wizard3.payment_info.payment_profile = \
+                new_payment_profile[0]
+            sale_payment_wizard3.payment_info.reference = 'Reference-3'
+            sale_payment_wizard3.payment_info.gift_card = None
+
+            with Transaction().set_context(active_id=sale.id):
+                sale_payment_wizard3.transition_add()
+
+            payment3, = SalePayment.search([
+                ('sale', '=', sale.id),
+                ('amount', '=', 45),
+                ('company', '=', self.company.id),
+            ], limit=1)
+            self.assertEqual(payment3.method, self.dummy_gateway.method)
+            self.assertEqual(payment3.provider, self.dummy_gateway.provider)
+            self.assertEqual(
+                new_payment_profile[0], payment3.payment_profile
+            )
+
+            self.assertEqual(SalePayment.search([], count=True), 3)
+            # Delete a payment
+            SalePayment.delete([payment3])
+            self.assertEqual(SalePayment.search([], count=True), 2)
 
 
 def suite():
