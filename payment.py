@@ -205,7 +205,8 @@ class Payment(ModelSQL, ModelView):
     @fields.depends('sale')
     def on_change_with_credit_account(self, name=None):
         if self.sale and self.sale.party:
-            return self.sale.party.account_receivable
+            return self.sale.party.account_receivable and \
+                self.sale.party.account_receivable.id
 
     @fields.depends('sale')
     def on_change_with_company(self, name=None):
