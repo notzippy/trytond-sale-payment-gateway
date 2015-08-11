@@ -1,26 +1,28 @@
 <?xml version="1.0"?>
 <form string="Payments" col="4">
-    <label name="sale" />
-    <field name="sale" />
-    <newline />
-    <label name="company"/>
-    <field name="company"/>
+    <label name="sale"/>
+    <field name="sale"/>
     <label name="sequence"/>
     <field name="sequence"/>
-    <newline />
     <label name="party"/>
     <field name="party"/>
     <label name="credit_account"/>
     <field name="credit_account"/>
     <label name="gateway"/>
     <field name="gateway"/>
+    <label name="description"/>
+    <field name="description"/>
     <label name="payment_profile"/>
     <field name="payment_profile"/>
-    <label name="method"/>
-    <field name="method"/>
-    <label name="amount"/>
-    <field name="amount"/>
-    <label name="amount_available"/>
-    <field name="amount_available"/>
+    <label name="reference"/>
+    <field name="reference"/>
+    <group id="amount" col="6" colspan="4">
+        <label name="amount"/>
+        <field name="amount"/>
+        <label name="amount_available"/>
+        <field name="amount_available"/>
+        <label name="amount_consumed"/>
+        <field name="amount_consumed"/>
+    </group>
     <field name="payment_transactions" colspan="4"/>
 </form>

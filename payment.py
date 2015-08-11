@@ -73,12 +73,13 @@ class Payment(ModelSQL, ModelView):
             ('gateway', '=', Eval('gateway')),
         ],
         states={
-            'required': Eval('method') == 'credit_card'
+            'required': Eval('method') == 'credit_card',
+            'invisible': Eval('method') != 'credit_card',
         },
         ondelete='RESTRICT', depends=['party', 'gateway', 'method'],
     )
-    method = fields.Function(fields.Char('Payment Method'), 'get_method')
-    provider = fields.Function(fields.Char('Payment Provider'), 'get_provider')
+    method = fields.Function(fields.Char('Method'), 'get_method')
+    provider = fields.Function(fields.Char('Provider'), 'get_provider')
     reference = fields.Char(
         'Reference', states={
             'invisible': Not(Eval('method') == 'manual'),
