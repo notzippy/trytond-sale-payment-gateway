@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    test_view_depends
-
-    :copyright: (c) 2014 by Openlabs Technologies & Consulting (P) Limited
-    :license: BSD, see LICENSE for more details.
-"""
 import unittest
 
 import trytond.tests.test_tryton
