@@ -44,7 +44,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Sale Payment Gateway'
-copyright = u'2014, Openlabs Technologies and Consulting (P) Ltd.'
+copyright = u'2015, Fulfil.IO Inc.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -197,7 +197,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'SalePaymentGateway.tex', u'Sale Payment Gateway Documentation',
-   u'Openlabs Technologies and Consulting (P) Ltd.', 'manual'),
+   u'Fulfil.IO Inc.', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -227,7 +227,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'salepaymentgateway', u'Sale Payment Gateway Documentation',
-     [u'Openlabs Technologies and Consulting (P) Ltd.'], 1)
+     [u'Fulfil.IO Inc.'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -241,7 +241,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'SalePaymentGateway', u'Sale Payment Gateway Documentation',
-   u'Openlabs Technologies and Consulting (P) Ltd.', 'SalePaymentGateway', 'One line description of project.',
+   u'Fulfil.IO Inc.', 'SalePaymentGateway', 'One line description of project.',
    'Miscellaneous'),
 ]
 
